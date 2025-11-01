@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Plus, X, Download } from "lucide-react";
 import { Product } from "./ProductCard";
 
 export interface CartItem extends Product {
@@ -13,9 +13,11 @@ interface CartProps {
   items: CartItem[];
   onUpdateQuantity: (productId: number, delta: number) => void;
   onRemoveItem: (productId: number) => void;
+  onCheckout: () => void;
+  onDownloadList: () => void;
 }
 
-const Cart = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: CartProps) => {
+const Cart = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, onCheckout, onDownloadList }: CartProps) => {
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
@@ -76,13 +78,24 @@ const Cart = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }: CartPr
                 ))}
               </div>
               
-              <div className="border-t pt-4 space-y-4">
+              <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total</span>
                   <span>{total.toFixed(2)} kr</span>
                 </div>
-                <Button className="w-full bg-[var(--gradient-fresh)] hover:opacity-90 h-12 text-base">
+                <Button 
+                  onClick={onCheckout}
+                  className="w-full bg-[var(--gradient-fresh)] hover:opacity-90 h-12 text-base"
+                >
                   Proceed to Checkout
+                </Button>
+                <Button 
+                  onClick={onDownloadList}
+                  variant="outline"
+                  className="w-full h-10"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Shopping List
                 </Button>
               </div>
             </>

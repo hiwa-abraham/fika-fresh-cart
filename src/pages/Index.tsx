@@ -3,9 +3,12 @@ import Header from "@/components/Header";
 import CategoryCard from "@/components/CategoryCard";
 import ProductCard, { Product } from "@/components/ProductCard";
 import Cart, { CartItem } from "@/components/Cart";
+import CheckoutDialog, { OrderData } from "@/components/CheckoutDialog";
+import OrderConfirmation from "@/components/OrderConfirmation";
 import { Apple, Milk, Beef, Croissant } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import heroImage from "@/assets/hero-groceries.jpg";
+import { downloadReceipt, downloadShoppingList } from "@/utils/downloadUtils";
 
 const categories = [
   { icon: Apple, title: "Fresh Produce", itemCount: 45 },
@@ -28,6 +31,9 @@ const products: Product[] = [
 const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState<OrderData | null>(null);
   const { toast } = useToast();
 
   const handleAddToCart = (product: Product) => {
@@ -67,7 +73,53 @@ const Index = () => {
     setCartItems((prev) => prev.filter((item) => item.id !== productId));
   };
 
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleOrderComplete = (orderData: OrderData) => {
+    setCurrentOrder(orderData);
+    setIsCheckoutOpen(false);
+    setIsConfirmationOpen(true);
+    setCartItems([]);
+    
+    toast({
+      title: "Order placed successfully!",
+      description: `Your order ${orderData.orderNumber} has been confirmed.`,
+    });
+  };
+
+  const handleDownloadReceipt = () => {
+    if (currentOrder) {
+      downloadReceipt(currentOrder);
+      toast({
+        title: "Receipt downloaded",
+        description: "Your receipt has been saved.",
+      });
+    }
+  };
+
+  const handleDownloadShoppingList = () => {
+    if (currentOrder) {
+      downloadShoppingList(currentOrder.items);
+      toast({
+        title: "Shopping list downloaded",
+        description: "Your shopping list has been saved.",
+      });
+    }
+  };
+
+  const handleDownloadCartList = () => {
+    downloadShoppingList(cartItems);
+    toast({
+      title: "Shopping list downloaded",
+      description: "Your shopping list has been saved.",
+    });
+  };
+
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,6 +182,24 @@ const Index = () => {
         items={cartItems}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckout}
+        onDownloadList={handleDownloadCartList}
+      />
+
+      <CheckoutDialog
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        items={cartItems}
+        total={cartTotal}
+        onOrderComplete={handleOrderComplete}
+      />
+
+      <OrderConfirmation
+        isOpen={isConfirmationOpen}
+        onClose={() => setIsConfirmationOpen(false)}
+        orderData={currentOrder}
+        onDownloadReceipt={handleDownloadReceipt}
+        onDownloadShoppingList={handleDownloadShoppingList}
       />
     </div>
   );
